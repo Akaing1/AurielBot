@@ -1,16 +1,51 @@
-# This is a sample Python script.
+import os
+from dotenv import load_dotenv
+from twitchio.ext import commands
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Load environment variables from .env file
+load_dotenv()
 
+# Get credentials from environment variables
+TWITCH_TOKEN = os.getenv('TWITCH_TOKEN')
+TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+BOT_NICK = os.getenv('BOT_NICK', 'AurielBot')
+CHANNEL = os.getenv('CHANNEL', 'your_channel_name')
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Create bot instance
+bot = commands.Bot(
+    token=TWITCH_TOKEN,
+    client_id=TWITCH_CLIENT_ID,
+    nick=BOT_NICK,
+    prefix='!',
+    initial_channels=[CHANNEL]
+)
 
+@bot.event
+async def event_ready():
+    """Event triggered when the bot connects to Twitch."""
+    print(f'Connected to Twitch as {bot.nick}')
 
-# Press the green button in the gutter to run the script.
+@bot.event
+async def event_message(message):
+    """Event triggered when a message is sent in the channel."""
+    # Don't respond to bot's own messages
+    if message.echo:
+        return
+    
+    print(f'{message.author.name}: {message.content}')
+    
+    # Process commands
+    await bot.handle_commands(message)
+
+@bot.command(name='hello')
+async def hello_command(ctx):
+    """Simple hello command."""
+    await ctx.send(f'Hello {ctx.author.name}!')
+
+@bot.command(name='ping')
+async def ping_command(ctx):
+    """Ping command."""
+    await ctx.send('Pong!')
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    bot.run()
